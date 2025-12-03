@@ -1,0 +1,100 @@
+name: 'Terraform Validate and Build'
+
+on:
+  workflow_call:
+    inputs:
+      aws-region:
+        required: false
+        type: string
+        default: 'eu-central-1'
+      aws-role:
+        required: true
+        type: string
+      runner_label:
+        required: false
+        type: string
+        default: 'small'
+      terraform-version:
+        required: false
+        type: string
+        default: '1.5.7'
+    
+jobs:
+  validate:
+    name: 'validate'
+    runs-on: ${{ inputs.runner_label }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+
+    - name: Install terraform
+      run: |
+        curl -LO https://releases.hashicorp.com/terraform/${{ inputs.terraform-version }}/terraform_${{ inputs.terraform-version }}_linux_amd64.zip
+        unzip terraform_${{ inputs.terraform-version }}_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+        sudo chmod +x /usr/local/bin/terraform
+
+    - name: Validate format and syntax
+      run: |
+        echo "::group::'terraform --version'"
+        terraform --version
+        echo "::endgroup::"
+
+        echo "::group::'terraform fmt -check -recursive'"
+        terraform fmt -check -recursive
+        echo "::endgroup::"
+        
+        echo "::group::'terraform init -backend=false"
+        terraform init -backend=false
+        echo "::endgroup::"
+        
+        echo "::group::'terraform validate'"
+        terraform validate
+        echo "::endgroup::"
+
+  plan:
+    name: 'plan'
+    needs: validate
+    runs-on: ${{ inputs.runner_label }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+    
+    - name: Install terraform
+      run: |
+        curl -LO https://releases.hashicorp.com/terraform/${{ inputs.terraform-version }}/terraform_${{ inputs.terraform-version }}_linux_amd64.zip
+        unzip terraform_${{ inputs.terraform-version }}_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+        sudo chmod +x /usr/local/bin/terraform
+
+    - name: Configure AWS credentials via OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws-role }}
+        role-session-name: GitHubActions-Plan-${{ github.run_id }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Terraform Plan
+      run: |
+        echo "::group::'terraform init -input=false'"
+        terraform init -input=false
+        echo "::endgroup::"
+
+        echo "::group::'terraform plan -out=terraform.tfplan -input=false'"
+        terraform plan -out=terraform.tfplan -input=false
+        echo "::endgroup::"
+
+    - name: Terraform Show
+      run: |
+        echo "::group::'terraform show terraform.tfplan'"
+        terraform show terraform.tfplan
+        echo "::endgroup::"
+
+    - name: Upload Plan Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan-${{ github.event.number }}
+        path: terraform.tfplan
+        retention-days: 1
