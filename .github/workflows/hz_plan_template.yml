@@ -22,7 +22,7 @@ on:
 jobs:
   Diff:
     name: 'Diff'
-    runs-on: ubuntu-latest
+    runs-on: {inputs.runner_label}
     timeout-minutes: 60
 
     steps:
