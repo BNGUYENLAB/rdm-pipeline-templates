@@ -24,8 +24,8 @@ jobs:
     name: 'Diff'
     runs-on: ${{inputs.runner_label}}
     timeout-minutes: 60
-    # container:
-    #   image: microwave88/custom-tf-cdktf-runner:${{ inputs.terraform-version }}
+    container:
+      image: microwave88/custom-tf-cdktf-runner:${{ inputs.terraform-version }}
 
     steps:
     - name: Checkout repository
@@ -38,33 +38,33 @@ jobs:
         ref: main
         path: route53-records-package
     
-    - name: Install terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: ${{ inputs.terraform-version }}
+    # - name: Install terraform
+    #   uses: hashicorp/setup-terraform@v3
+    #   with:
+    #     terraform_version: ${{ inputs.terraform-version }}
     
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.13'
+    # - name: Set up Python
+    #   uses: actions/setup-python@v5
+    #   with:
+    #     python-version: '3.13'
 
-    - name: Install pipenv
-      run: |
-        python -m pip install --upgrade pip
-        pip install pipenv
+    # - name: Install pipenv
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     pip install pipenv
 
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+    # - name: Install Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20'
 
-    - name: Install CDKTF CLI
-      run: npm install --global cdktf-cli@latest
+    # - name: Install CDKTF CLI
+    #   run: npm install --global cdktf-cli@latest
 
-    - name: Install Python packages
-      run: |
-        pipenv install
-        pipenv run pip install -e route53-records-package/
+    # - name: Install Python packages
+    #   run: |
+    #     pipenv install
+    #     pipenv run pip install -e route53-records-package/
 
     - name: Configure AWS credentials via OIDC
       uses: aws-actions/configure-aws-credentials@v4
