@@ -61,9 +61,9 @@ jobs:
     # - name: Install CDKTF CLI
     #   run: npm install --global cdktf-cli@latest
 
-    - name: Install Python packages
-      run: |
-        pipenv run pip install -e route53-records-package/
+    # - name: Install Python packages
+    #   run: |
+    #     pipenv run pip install -e route53-records-package/
 
     - name: Configure AWS credentials (Admin) via OIDC
       uses: aws-actions/configure-aws-credentials@v4
